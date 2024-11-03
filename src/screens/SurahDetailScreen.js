@@ -1,3 +1,4 @@
+// SurahDetailScreen.js
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -9,6 +10,7 @@ import {
 import axios from "axios";
 import { Audio } from "expo-av";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SurahDetailScreen({ route }) {
   const { surahNumber, name } = route.params;
@@ -21,7 +23,6 @@ export default function SurahDetailScreen({ route }) {
   useEffect(() => {
     fetchSurahDetail();
     return () => {
-      // Unload sound when component unmounts
       if (sound) {
         sound.unloadAsync();
       }
@@ -45,13 +46,11 @@ export default function SurahDetailScreen({ route }) {
   };
 
   const playSound = async (audioUrl) => {
-    // Stop any currently playing sound
     if (sound) {
       await sound.stopAsync();
       await sound.unloadAsync();
     }
 
-    // Load new sound
     const { sound: newSound } = await Audio.Sound.createAsync({
       uri: audioUrl,
     });
@@ -61,18 +60,28 @@ export default function SurahDetailScreen({ route }) {
 
   const renderAyah = ({ item }) => (
     <TouchableOpacity
-      className="p-4 border-b border-gray-200"
-      onPress={() => playSound(item.audio.alafasy)} // Play audio on press
+      onPress={() => navigation.navigate("AyahDetail", { ayah: item })}
     >
-      <View className="mb-3 flex-row justify-between">
-        <View className="w-8 h-8 bg-blue-500 rounded-full justify-center items-center">
-          <Text className="text-white font-bold">{item.number.inSurah}</Text>
+      <View className="p-4 border-b border-gray-200">
+        <View className="mb-3 flex-row justify-between">
+          <View className="w-8 h-8 bg-blue-500 rounded-full justify-center items-center">
+            <Text className="text-white font-bold">{item.number.inSurah}</Text>
+          </View>
+          {/* <Text className="text-gray-500">#{item.number.inQuran}</Text> */}
+          <TouchableOpacity
+            className="flex-row items-center mt-2"
+            onPress={() => playSound(item.audio.alafasy)}
+          >
+            <Ionicons name="play-circle" size={24} color="#3B82F6" />
+            <Text className="text-blue-500 ml-2">Play Sound</Text>
+          </TouchableOpacity>
         </View>
-        <Text className="text-gray-500">#{item.number.inQuran}</Text>
-      </View>
 
-      <Text className="text-2xl text-right mb-4 font-arabic">{item.arab}</Text>
-      <Text className="text-base text-gray-700">{item.translation}</Text>
+        <Text className="text-3xl text-right mb-4 font-arabic">
+          {item.arab}
+        </Text>
+        <Text className="text-base text-gray-700 mb-2">{item.translation}</Text>
+      </View>
     </TouchableOpacity>
   );
 
@@ -104,7 +113,6 @@ export default function SurahDetailScreen({ route }) {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header Info */}
       <View className="p-4 bg-blue-50">
         <Text className="text-xl font-bold text-center mb-2">{surah.name}</Text>
         <Text className="text-center text-gray-600 mb-1">
@@ -115,7 +123,6 @@ export default function SurahDetailScreen({ route }) {
         </Text>
       </View>
 
-      {/* Bismillah */}
       {surah.bismillah && (
         <View className="p-4 border-b border-gray-200">
           <Text className="text-2xl text-center mb-2 font-arabic">
@@ -126,8 +133,6 @@ export default function SurahDetailScreen({ route }) {
           </Text>
         </View>
       )}
-
-      {/* List of Ayahs */}
       <FlatList
         data={surah.ayahs}
         renderItem={renderAyah}
