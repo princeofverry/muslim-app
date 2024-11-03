@@ -17,7 +17,8 @@ export default function SurahDetailScreen({ route }) {
   const [surah, setSurah] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sound, setSound] = useState(null); // Audio state
+  const [sound, setSound] = useState(null);
+  const [bookmarks, setBookmarks] = useState([]); // State to hold bookmarks
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function SurahDetailScreen({ route }) {
         `https://quran-api-id.vercel.app/surahs/${surahNumber}`
       );
       setSurah(response.data);
+      // Load existing bookmarks from storage or state if necessary
     } catch (error) {
       console.error("Error fetching surah detail:", error);
       setError("Gagal memuat detail surah. Silakan coba lagi.");
@@ -58,6 +60,18 @@ export default function SurahDetailScreen({ route }) {
     await newSound.playAsync();
   };
 
+  const toggleBookmark = (ayahNumber) => {
+    setBookmarks((prevBookmarks) => {
+      if (prevBookmarks.includes(ayahNumber)) {
+        // Remove from bookmarks
+        return prevBookmarks.filter((number) => number !== ayahNumber);
+      } else {
+        // Add to bookmarks
+        return [...prevBookmarks, ayahNumber];
+      }
+    });
+  };
+
   const renderAyah = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate("AyahDetail", { ayah: item })}
@@ -67,19 +81,32 @@ export default function SurahDetailScreen({ route }) {
           <View className="w-8 h-8 bg-blue-500 rounded-full justify-center items-center">
             <Text className="text-white font-bold">{item.number.inSurah}</Text>
           </View>
-          {/* <Text className="text-gray-500">#{item.number.inQuran}</Text> */}
           <TouchableOpacity
-            className="flex-row items-center mt-2"
-            onPress={() => playSound(item.audio.alafasy)}
+            onPress={() => toggleBookmark(item.number.inSurah)}
+            className="flex-row items-center"
           >
-            <Ionicons name="play-circle" size={24} color="#3B82F6" />
-            <Text className="text-blue-500 ml-2">Play Sound</Text>
+            <Ionicons
+              name={
+                bookmarks.includes(item.number.inSurah)
+                  ? "bookmark"
+                  : "bookmark-outline"
+              }
+              size={24}
+              color={bookmarks.includes(item.number.inSurah) ? "gold" : "gray"}
+            />
           </TouchableOpacity>
         </View>
 
         <Text className="text-3xl text-right mb-4 font-arabic">
           {item.arab}
         </Text>
+        <TouchableOpacity
+          className="flex-row items-center mt-2"
+          onPress={() => playSound(item.audio.alafasy)}
+        >
+          <Ionicons name="play-circle" size={24} color="#3B82F6" />
+          <Text className="text-blue-500 ml-2">Play Sound</Text>
+        </TouchableOpacity>
         <Text className="text-base text-gray-700 mb-2">{item.translation}</Text>
       </View>
     </TouchableOpacity>
