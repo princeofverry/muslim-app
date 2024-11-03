@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import axios from "axios";
+import { Audio } from "expo-av";
 import { useNavigation } from "@react-navigation/native";
 
 export default function SurahDetailScreen({ route }) {
@@ -14,10 +15,17 @@ export default function SurahDetailScreen({ route }) {
   const [surah, setSurah] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sound, setSound] = useState(null); // Audio state
   const navigation = useNavigation();
 
   useEffect(() => {
     fetchSurahDetail();
+    return () => {
+      // Unload sound when component unmounts
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
   }, [surahNumber]);
 
   const fetchSurahDetail = async () => {
@@ -36,10 +44,25 @@ export default function SurahDetailScreen({ route }) {
     }
   };
 
+  const playSound = async (audioUrl) => {
+    // Stop any currently playing sound
+    if (sound) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+    }
+
+    // Load new sound
+    const { sound: newSound } = await Audio.Sound.createAsync({
+      uri: audioUrl,
+    });
+    setSound(newSound);
+    await newSound.playAsync();
+  };
+
   const renderAyah = ({ item }) => (
     <TouchableOpacity
       className="p-4 border-b border-gray-200"
-      onPress={() => {}} // Menghapus navigasi agar tidak merujuk ke halaman lain
+      onPress={() => playSound(item.audio.alafasy)} // Play audio on press
     >
       <View className="mb-3 flex-row justify-between">
         <View className="w-8 h-8 bg-blue-500 rounded-full justify-center items-center">
